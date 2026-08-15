@@ -1,0 +1,25 @@
+{
+  "name": "criss-telemetry-portal",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Real-time rover telemetry portal (CRISS Robotics recruitment task)",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "postinstall": "npm run build:shared",
+    "dev:web": "npm run dev --workspace=apps/web",
+    "dev:server": "npm run dev --workspace=apps/server",
+    "build": "npm run build --workspace=packages/shared && npm run build --workspace=apps/server && npm run build --workspace=apps/web",
+    "build:shared": "npm run build --workspace=packages/shared",
+    "build:server": "npm run build --workspace=apps/server",
+    "build:web": "npm run build --workspace=apps/web",
+    "lint": "npm run lint --workspace=apps/web && npm run lint --workspace=apps/server",
+    "typecheck": "npm run build:shared && npm run typecheck --workspace=apps/web && npm run typecheck --workspace=apps/server && npm run typecheck --workspace=packages/shared",
+    "test": "npm run test --workspace=apps/server"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
