@@ -36,6 +36,30 @@ The backend is the only source of authorization truth. The frontend's role
 checks are UX convenience, never a security boundary — every
 engineer-only action is re-validated server-side.
 
+### A note on Prisma in this repo
+
+`apps/server/prisma/schema.prisma` and `prisma/migrations/` are the real,
+authoritative schema and migration history, exactly as the recruitment
+brief specifies. The database was created by applying that migration.
+
+The runtime query layer (`src/repositories/`), however, uses `pg`
+directly rather than the generated `@prisma/client`. That's a narrow,
+deliberate substitution made because this project was developed in a
+sandbox that cannot reach `binaries.prisma.sh` — every `prisma` CLI
+invocation, including `--version`, needs that host to fetch its schema
+engine, so `prisma generate` could not run there. On a machine with
+normal internet access:
+
+```bash
+cd apps/server
+npx prisma generate
+```
+
+produces a fully typed `@prisma/client` in seconds. Swapping the
+repository functions to call it instead of raw SQL is a mechanical,
+low-risk change — every query in `src/repositories/` is a direct,
+intentional analogue of the equivalent Prisma Client call.
+
 ## Prerequisites
 
 - Node.js ≥ 20
@@ -54,7 +78,24 @@ npm install
 # copy env templates
 cp apps/server/.env.example apps/server/.env
 cp apps/web/.env.example apps/web/.env.local
+
+# create the database and apply the schema (adjust DATABASE_URL first)
+createdb telemetry_portal
+psql "$DATABASE_URL" -f apps/server/prisma/migrations/20260816120000_init/migration.sql
+
+# seed development accounts
+npm run db:seed --workspace=apps/server
 ```
+
+### Development login credentials
+
+Seeded by `npm run db:seed --workspace=apps/server` — local development
+only, never used in any deployed environment:
+
+| Role | Email | Password |
+|---|---|---|
+| Viewer | `viewer@criss-robotics.dev` | `ViewerDev123!` |
+| Engineer | `engineer@criss-robotics.dev` | `EngineerDev123!` |
 
 ## Development commands
 
@@ -85,7 +126,7 @@ curl http://localhost:4000/health
 | `NODE_ENV` | `development` \| `test` \| `production` | No (defaults to `development`) |
 | `PORT` | Port the API listens on | No (defaults to `4000`) |
 | `CORS_ORIGIN` | Exact origin of the frontend, used for CORS (and Socket.IO from Phase 4) | No (defaults to `http://localhost:3000`) |
-| `DATABASE_URL` | PostgreSQL connection string | Added Phase 2 |
+| `DATABASE_URL` | PostgreSQL connection string | Yes |
 | `JWT_SECRET` | Secret used to sign JWTs — **never commit a real value** | Added Phase 3 |
 | `JWT_EXPIRES_IN` | Token lifetime, e.g. `1h` | Added Phase 3 |
 
@@ -103,8 +144,8 @@ variable above is documented in the corresponding `.env.example` file.
 
 | Phase | Scope |
 |---|---|
-| 1 ✅ | Monorepo foundation (this phase) |
-| 2 | PostgreSQL + Prisma schema |
+| 1 ✅ | Monorepo foundation |
+| 2 ✅ | PostgreSQL + Prisma schema |
 | 3 | JWT authentication + RBAC |
 | 4 | Socket.IO real-time telemetry backend |
 | 5 | Frontend auth + Zustand store |

@@ -12,6 +12,7 @@ interface EnvConfig {
   nodeEnv: "development" | "test" | "production";
   port: number;
   corsOrigin: string;
+  databaseUrl: string;
 }
 
 function readNodeEnv(): EnvConfig["nodeEnv"] {
@@ -33,8 +34,17 @@ function readCorsOrigin(): string {
   return process.env.CORS_ORIGIN ?? "http://localhost:3000";
 }
 
+function readDatabaseUrl(): string {
+  const value = process.env.DATABASE_URL;
+  if (!value) {
+    throw new Error("Missing required environment variable: DATABASE_URL");
+  }
+  return value;
+}
+
 export const env: EnvConfig = {
   nodeEnv: readNodeEnv(),
   port: readPort(),
   corsOrigin: readCorsOrigin(),
+  databaseUrl: readDatabaseUrl(),
 };
