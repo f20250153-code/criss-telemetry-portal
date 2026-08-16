@@ -140,13 +140,31 @@ curl http://localhost:4000/health
 No secrets are committed to source control — see `.gitignore`. Every
 variable above is documented in the corresponding `.env.example` file.
 
+## API reference
+
+All responses use the envelope `{ "success": true, "data": ... }` or
+`{ "success": false, "error": { "message", "code" } }`.
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/health` | none | Liveness check |
+| `GET` | `/health/db` | none | Readiness check — confirms Postgres connectivity |
+| `POST` | `/auth/login` | none | `{ email, password }` → `{ user, token }` |
+| `GET` | `/auth/me` | Bearer token | Returns the current authenticated user |
+
+Status codes: `400` invalid input, `401` missing/invalid/expired token
+or bad credentials, `403` authenticated but wrong role, `404` unknown
+route, `500` unexpected error. `/auth/login` returns the same `401` +
+`INVALID_CREDENTIALS` code for both "no such user" and "wrong
+password" so the response never discloses which one it was.
+
 ## Roadmap
 
 | Phase | Scope |
 |---|---|
 | 1 ✅ | Monorepo foundation |
 | 2 ✅ | PostgreSQL + Prisma schema |
-| 3 | JWT authentication + RBAC |
+| 3 ✅ | JWT authentication + RBAC |
 | 4 | Socket.IO real-time telemetry backend |
 | 5 | Frontend auth + Zustand store |
 | 6 | Live telemetry dashboard |

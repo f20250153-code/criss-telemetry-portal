@@ -13,6 +13,8 @@ interface EnvConfig {
   port: number;
   corsOrigin: string;
   databaseUrl: string;
+  jwtSecret: string;
+  jwtExpiresIn: string;
 }
 
 function readNodeEnv(): EnvConfig["nodeEnv"] {
@@ -42,9 +44,25 @@ function readDatabaseUrl(): string {
   return value;
 }
 
+function readJwtSecret(): string {
+  const value = process.env.JWT_SECRET;
+  if (!value || value.length < 16) {
+    throw new Error(
+      "Missing or too-short JWT_SECRET environment variable (must be at least 16 characters)",
+    );
+  }
+  return value;
+}
+
+function readJwtExpiresIn(): string {
+  return process.env.JWT_EXPIRES_IN ?? "1h";
+}
+
 export const env: EnvConfig = {
   nodeEnv: readNodeEnv(),
   port: readPort(),
   corsOrigin: readCorsOrigin(),
   databaseUrl: readDatabaseUrl(),
+  jwtSecret: readJwtSecret(),
+  jwtExpiresIn: readJwtExpiresIn(),
 };

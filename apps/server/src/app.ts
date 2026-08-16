@@ -3,6 +3,8 @@ import cors from "cors";
 import helmet from "helmet";
 import { env } from "./config/env";
 import { healthRouter } from "./routes/health";
+import { authRouter } from "./routes/auth";
+import { exampleRouter } from "./routes/example";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler";
 
 /**
@@ -23,6 +25,8 @@ export function createApp(): Express {
   app.use(express.json());
 
   app.use("/health", healthRouter);
+  app.use("/auth", authRouter);
+  app.use("/example", exampleRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);
