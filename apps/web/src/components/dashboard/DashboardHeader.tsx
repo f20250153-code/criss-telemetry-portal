@@ -13,7 +13,7 @@ export function DashboardHeader() {
   return (
     <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-6 py-4">
       <div className="flex items-center gap-2">
-        <Activity className="h-5 w-5 text-primary" />
+        <Activity aria-hidden="true" className="h-5 w-5 text-primary" />
         <span className="font-medium">Rover Telemetry Portal</span>
       </div>
       <div className="flex items-center gap-4 text-sm">
@@ -25,7 +25,7 @@ export function DashboardHeader() {
           </span>
         </span>
         <Button variant="outline" size="sm" onClick={logout}>
-          <LogOut className="h-4 w-4" />
+          <LogOut aria-hidden="true" className="h-4 w-4" />
           Log out
         </Button>
       </div>

@@ -30,10 +30,10 @@ function DashboardContent() {
   const user = useAuthStore((s) => s.user);
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="dark min-h-screen bg-background">
       <DashboardHeader />
 
-      <div className="mx-auto max-w-6xl space-y-4 p-6">
+      <div className="mx-auto max-w-6xl space-y-4 p-4 sm:p-6">
         {error && (
           <div
             role="alert"
@@ -43,7 +43,7 @@ function DashboardContent() {
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           <StatCard
             label="Battery"
             value={current ? current.batteryVoltage.toFixed(2) : "—"}
@@ -63,7 +63,7 @@ function DashboardContent() {
               <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Rover state
               </span>
-              <Cpu className="h-4 w-4 text-muted-foreground" />
+              <Cpu aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
             </div>
             {current ? <RoverStateBadge state={current.state} /> : <span className="text-2xl">—</span>}
           </div>
@@ -72,9 +72,9 @@ function DashboardContent() {
               <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Last update
               </span>
-              <Clock className="h-4 w-4 text-muted-foreground" />
+              <Clock aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
             </div>
-            <span className="font-mono text-sm tabular-nums">
+            <span aria-live="polite" className="font-mono text-sm tabular-nums">
               {lastUpdatedAt ? new Date(lastUpdatedAt).toLocaleTimeString() : "Waiting for data…"}
             </span>
           </div>

@@ -13,8 +13,12 @@ export function ConnectionBadge({ status }: { status: ConnectionStatus }) {
   const { label, icon: Icon, className } = CONFIG[status];
 
   return (
-    <div className={cn("flex items-center gap-1.5 text-xs font-medium", className)}>
-      <Icon className={cn("h-3.5 w-3.5", status === "connected" && "motion-safe:animate-pulse")} />
+    <div
+      role="status"
+      aria-live="polite"
+      className={cn("flex items-center gap-1.5 text-xs font-medium", className)}
+    >
+      <Icon aria-hidden="true" className={cn("h-3.5 w-3.5", status === "connected" && "motion-safe:animate-pulse")} />
       <span>{label}</span>
     </div>
   );

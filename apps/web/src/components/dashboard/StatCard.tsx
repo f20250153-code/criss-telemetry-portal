@@ -28,7 +28,7 @@ export function StatCard({
         <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
           {label}
         </CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
+        <Icon aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent className="p-4 pt-2">
         <div className={cn("font-mono text-2xl font-semibold tabular-nums", toneClass)}>
