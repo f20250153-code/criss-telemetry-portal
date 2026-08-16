@@ -151,6 +151,33 @@ All responses use the envelope `{ "success": true, "data": ... }` or
 | `GET` | `/health/db` | none | Readiness check — confirms Postgres connectivity |
 | `POST` | `/auth/login` | none | `{ email, password }` → `{ user, token }` |
 | `GET` | `/auth/me` | Bearer token | Returns the current authenticated user |
+| `GET` | `/telemetry/history` | Bearer token | Recent telemetry readings |
+| `POST` | `/telemetry/trigger` | Bearer token, ENGINEER only | Generates + broadcasts a new reading; body may optionally override `batteryVoltage`, `temperature`, `state` (still server-validated/clamped) |
+
+### Real-time telemetry
+
+The backend opens a Socket.IO server alongside the REST API. Connections
+must present a JWT in the handshake (`socket.io-client`'s `auth: { token }`
+option) — there's no unauthenticated socket access. On connect, the
+server immediately sends `telemetry:history`; every subsequent reading
+(triggered via `POST /telemetry/trigger`) is broadcast as
+`telemetry:update` to all connected clients. No frontend polling is used.
+
+To verify manually against a running server:
+
+```bash
+# get a token
+curl -s -X POST http://localhost:4000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"engineer@criss-robotics.dev","password":"EngineerDev123!"}'
+
+# in one terminal, listen
+node apps/server/scripts/verify-socket.mjs <jwt>
+
+# in another terminal, trigger a reading and watch it arrive live above
+curl -X POST http://localhost:4000/telemetry/trigger \
+  -H "Authorization: Bearer <jwt>" -H "Content-Type: application/json" -d '{}'
+```
 
 Status codes: `400` invalid input, `401` missing/invalid/expired token
 or bad credentials, `403` authenticated but wrong role, `404` unknown
@@ -165,7 +192,7 @@ password" so the response never discloses which one it was.
 | 1 ✅ | Monorepo foundation |
 | 2 ✅ | PostgreSQL + Prisma schema |
 | 3 ✅ | JWT authentication + RBAC |
-| 4 | Socket.IO real-time telemetry backend |
+| 4 ✅ | Socket.IO real-time telemetry backend |
 | 5 | Frontend auth + Zustand store |
 | 6 | Live telemetry dashboard |
 | 7 | Engineer control panel |

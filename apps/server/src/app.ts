@@ -5,6 +5,7 @@ import { env } from "./config/env";
 import { healthRouter } from "./routes/health";
 import { authRouter } from "./routes/auth";
 import { exampleRouter } from "./routes/example";
+import { telemetryRouter } from "./routes/telemetry";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler";
 
 /**
@@ -27,6 +28,7 @@ export function createApp(): Express {
   app.use("/health", healthRouter);
   app.use("/auth", authRouter);
   app.use("/example", exampleRouter);
+  app.use("/telemetry", telemetryRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);
