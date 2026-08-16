@@ -195,7 +195,7 @@ password" so the response never discloses which one it was.
 | 4 ✅ | Socket.IO real-time telemetry backend |
 | 5 ✅ | Frontend auth + Zustand store |
 | 6 ✅ | Live telemetry dashboard |
-| 7 | Engineer control panel |
+| 7 ✅ | Engineer control panel |
 | 8 | UI polish |
 | 9 | Security audit + full test coverage |
 | 10 | Dockerization |

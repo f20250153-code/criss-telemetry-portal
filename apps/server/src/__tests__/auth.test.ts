@@ -95,6 +95,24 @@ describe("Protected routes", () => {
     expect(res.status).toBe(200);
   });
 
+  it("ignores a client-supplied role claim — role always comes from the verified JWT", async () => {
+    // A viewer's token is genuinely a viewer's token. Nothing the
+    // client sends alongside it (body field, header, query param) can
+    // elevate the request, because requireRole only ever reads
+    // req.user.role, which was set from the token signature in the
+    // authenticate middleware — never from anything else on the request.
+    const loginRes = await request(app).post("/auth/login").send(VIEWER);
+    const token = loginRes.body.data.token;
+
+    const res = await request(app)
+      .get("/example/engineer-ping")
+      .set("Authorization", `Bearer ${token}`)
+      .set("X-Role", "ENGINEER")
+      .send({ role: "ENGINEER" });
+
+    expect(res.status).toBe(403);
+  });
+
   it("rejects a request with a role claim that doesn't match a real elevated user (token integrity)", async () => {
     // A token can only be forged if you know the JWT secret — this
     // proves the server derives role from the verified signature, not

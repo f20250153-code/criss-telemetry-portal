@@ -7,8 +7,10 @@ import { StatCard } from "@/components/dashboard/StatCard";
 import { RoverStateBadge } from "@/components/dashboard/RoverStateBadge";
 import { TelemetryChart } from "@/components/dashboard/TelemetryChart";
 import { RecentReadings } from "@/components/dashboard/RecentReadings";
+import { EngineerPanel } from "@/components/engineer/EngineerPanel";
 import { useTelemetrySocket } from "@/hooks/useTelemetrySocket";
 import { useTelemetryStore } from "@/stores/telemetryStore";
+import { useAuthStore } from "@/stores/authStore";
 
 function batteryTone(voltage: number): "good" | "warning" | "critical" {
   if (voltage < 18) return "critical";
@@ -25,6 +27,7 @@ function temperatureTone(celsius: number): "good" | "warning" | "critical" {
 function DashboardContent() {
   useTelemetrySocket();
   const { current, history, lastUpdatedAt, error } = useTelemetryStore();
+  const user = useAuthStore((s) => s.user);
 
   return (
     <main className="min-h-screen bg-background">
@@ -76,6 +79,8 @@ function DashboardContent() {
             </span>
           </div>
         </div>
+
+        {user?.role === "ENGINEER" && <EngineerPanel />}
 
         <TelemetryChart history={history} />
         <RecentReadings history={history} />

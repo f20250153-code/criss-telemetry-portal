@@ -80,4 +80,17 @@ describe("POST /telemetry/trigger", () => {
     expect(res.body.data.batteryVoltage).toBe(12.5);
     expect(res.body.data.state).toBe("FAULT");
   });
+
+  it("rejects a viewer even if the request body claims an engineer role", async () => {
+    // This is the security-critical case from the spec: a tampered
+    // frontend (or a viewer hitting the API directly) cannot elevate
+    // itself by sending a role field — the endpoint never reads one.
+    const token = await tokenFor(VIEWER);
+    const res = await request(app)
+      .post("/telemetry/trigger")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ role: "ENGINEER", batteryVoltage: 20 });
+
+    expect(res.status).toBe(403);
+  });
 });
