@@ -32,5 +32,8 @@ else
   node apps/server/scripts/apply-migrations.mjs
 fi
 
+echo "[entrypoint] seeding development accounts (safe to re-run, idempotent)..."
+node apps/server/scripts/seed.mjs
+
 echo "[entrypoint] starting server"
 exec node apps/server/dist/index.js
