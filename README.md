@@ -190,6 +190,42 @@ discloses which one it was, and is rate-limited (20 requests / 15 min
 See [`docs/SECURITY_AUDIT.md`](./docs/SECURITY_AUDIT.md) for the full
 Phase 9 security audit.
 
+## Docker
+
+One-command local startup — Postgres, backend, and frontend all
+containerized:
+
+```bash
+cp .env.example .env   # fill in a real JWT_SECRET
+docker compose up --build
+```
+
+- Frontend: http://localhost:3000
+- Backend: http://localhost:4000
+- Postgres: `localhost:5432` (persisted in the `postgres-data` volume)
+
+`server` waits for Postgres to report healthy before starting, and its
+entrypoint applies migrations automatically — it tries the real
+`prisma migrate deploy` first, falling back to applying
+`prisma/migrations/*/migration.sql` directly (idempotent, tracked in
+`_prisma_migrations`) if the Prisma CLI can't reach its engine binary
+in your network environment. `web` waits for `server` to report
+healthy before starting.
+
+> **Note:** the Dockerfiles and compose config were written and
+> verified as far as this environment allows — this sandbox has no
+> `docker` binary, so `docker compose up` itself couldn't be executed
+> here. What *was* verified without Docker: the exact `npm ci` +
+> `npm run build` + `npm prune --omit=dev` sequence each Dockerfile
+> runs (in an isolated directory mirroring each build stage — this
+> caught and fixed a real bug, a `postinstall` script failing in the
+> dependency-only layer), and the fallback migration script end-to-end
+> against a real Postgres database, including idempotent re-runs. Run
+> `docker compose up --build` locally to do the full verification;
+> `docker compose ps` should show all three services healthy, and
+> `curl http://localhost:4000/health` / opening http://localhost:3000
+> should both work.
+
 ## Roadmap
 
 | Phase | Scope |
@@ -203,7 +239,7 @@ Phase 9 security audit.
 | 7 ✅ | Engineer control panel |
 | 8 ✅ | UI polish |
 | 9 ✅ | Security audit + full test coverage |
-| 10 | Dockerization |
+| 10 ✅ | Dockerization |
 | 11 | Deployment |
 | 12 | Final submission audit |
 
