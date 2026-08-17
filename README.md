@@ -181,9 +181,14 @@ curl -X POST http://localhost:4000/telemetry/trigger \
 
 Status codes: `400` invalid input, `401` missing/invalid/expired token
 or bad credentials, `403` authenticated but wrong role, `404` unknown
-route, `500` unexpected error. `/auth/login` returns the same `401` +
-`INVALID_CREDENTIALS` code for both "no such user" and "wrong
-password" so the response never discloses which one it was.
+route, `429` too many login attempts, `500` unexpected error.
+`/auth/login` returns the same `401` + `INVALID_CREDENTIALS` code for
+both "no such user" and "wrong password" so the response never
+discloses which one it was, and is rate-limited (20 requests / 15 min
+/ IP) against brute-force guessing.
+
+See [`docs/SECURITY_AUDIT.md`](./docs/SECURITY_AUDIT.md) for the full
+Phase 9 security audit.
 
 ## Roadmap
 
@@ -197,7 +202,7 @@ password" so the response never discloses which one it was.
 | 6 ✅ | Live telemetry dashboard |
 | 7 ✅ | Engineer control panel |
 | 8 ✅ | UI polish |
-| 9 | Security audit + full test coverage |
+| 9 ✅ | Security audit + full test coverage |
 | 10 | Dockerization |
 | 11 | Deployment |
 | 12 | Final submission audit |

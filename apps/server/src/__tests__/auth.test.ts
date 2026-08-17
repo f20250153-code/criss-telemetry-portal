@@ -47,6 +47,12 @@ describe("POST /auth/login", () => {
     expect(res.status).toBe(400);
     expect(res.body.error.code).toBe("VALIDATION_ERROR");
   });
+
+  it("applies rate-limit headers to protect against brute-force guessing", async () => {
+    const res = await request(app).post("/auth/login").send(VIEWER);
+    expect(res.headers["ratelimit-limit"]).toBeDefined();
+    expect(res.headers["ratelimit-remaining"]).toBeDefined();
+  });
 });
 
 describe("Protected routes", () => {

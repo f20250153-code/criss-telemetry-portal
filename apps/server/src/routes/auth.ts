@@ -3,13 +3,14 @@ import type { ApiResult, PublicUser } from "@telemetry/shared";
 import { login } from "../services/authService";
 import { loginSchema, type LoginInput } from "../validation/authSchemas";
 import { validateBody } from "../middleware/validate";
+import { loginRateLimiter } from "../middleware/rateLimit";
 import { authenticate, type AuthenticatedRequest } from "../middleware/auth";
 import { findUserById } from "../repositories/userRepository";
 import { AppError } from "../utils/AppError";
 
 export const authRouter = Router();
 
-authRouter.post("/login", validateBody(loginSchema), async (req, res, next) => {
+authRouter.post("/login", loginRateLimiter, validateBody(loginSchema), async (req, res, next) => {
   try {
     const { email, password } = req.body as LoginInput;
     const result = await login(email, password);
