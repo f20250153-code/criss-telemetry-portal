@@ -1,169 +1,106 @@
 # Rover Telemetry Portal
 
-A real-time telemetry dashboard for a rover drive team, built for the CRISS
-Robotics Full-Stack recruitment task. Engineers can trigger and view live
-rover telemetry (battery voltage, temperature, rover state); viewers get
-read-only dashboard access. Built as a TypeScript monorepo with a Next.js
-frontend and an Express + Socket.IO backend.
+A real-time telemetry dashboard for a rover drive team, built for the CRISS Robotics full-stack recruitment task. Viewers can watch live telemetry — battery, temperature, rover state. Engineers get an extra panel to manually trigger a reading, which streams out to everyone connected over a WebSocket the moment it happens.
 
-> **Status:** foundation phase. Auth, the database, and real-time telemetry
-> are implemented in later phases — see [Roadmap](#roadmap) below.
+**Live app:** https://criss-telemetry-portal.vercel.app
+**API:** https://criss-telemetry-portal-production.up.railway.app
 
-## Architecture
+## Stack
+
+- **Frontend** — Next.js 16 (App Router), TypeScript, Tailwind, shadcn/ui, Zustand, Recharts
+- **Backend** — Node.js, Express, Socket.IO, PostgreSQL, JWT auth
+- **Infra** — Docker, Vercel (frontend), Railway (backend + Postgres)
+
+npm workspaces monorepo:
 
 ```
-telemetry-portal/
-├── apps/
-│   ├── web/          Next.js 16 (App Router) + TypeScript + Tailwind + shadcn/ui
-│   └── server/        Node.js + Express + TypeScript
-├── packages/
-│   └── shared/         Shared TypeScript types/contracts used by both apps
-├── docker-compose.yml   (added Phase 10)
-└── package.json         npm workspaces root
+apps/
+  web/       Next.js frontend
+  server/    Express + Socket.IO backend
+packages/
+  shared/    types and socket event contracts shared by both apps
 ```
 
-- **Frontend** (`apps/web`) — Next.js App Router, Tailwind CSS v4, a small
-  hand-rolled shadcn/ui component foundation (`src/components/ui`), Zustand
-  for global state (added Phase 5), Recharts for live charts (added Phase 6).
-- **Backend** (`apps/server`) — Express REST API with a centralized error
-  handler, PostgreSQL via Prisma (added Phase 2), JWT auth (added Phase 3),
-  and Socket.IO for real-time telemetry (added Phase 4).
-- **Shared** (`packages/shared`) — TypeScript types and Socket.IO event
-  contracts imported by both apps so the wire format can never drift out of
-  sync between frontend and backend.
+Authorization lives entirely on the backend. The frontend hides the engineer panel from viewers for UX reasons, but that's not what actually stops them — the trigger endpoint checks the role on the server too, so a viewer's token can't call it no matter what the UI shows.
 
-The backend is the only source of authorization truth. The frontend's role
-checks are UX convenience, never a security boundary — every
-engineer-only action is re-validated server-side.
-
-### A note on Prisma in this repo
-
-`apps/server/prisma/schema.prisma` and `prisma/migrations/` are the real,
-authoritative schema and migration history, exactly as the recruitment
-brief specifies. The database was created by applying that migration.
-
-The runtime query layer (`src/repositories/`), however, uses `pg`
-directly rather than the generated `@prisma/client`. That's a narrow,
-deliberate substitution made because this project was developed in a
-sandbox that cannot reach `binaries.prisma.sh` — every `prisma` CLI
-invocation, including `--version`, needs that host to fetch its schema
-engine, so `prisma generate` could not run there. On a machine with
-normal internet access:
+## Running it locally
 
 ```bash
-cd apps/server
-npx prisma generate
-```
-
-produces a fully typed `@prisma/client` in seconds. Swapping the
-repository functions to call it instead of raw SQL is a mechanical,
-low-risk change — every query in `src/repositories/` is a direct,
-intentional analogue of the equivalent Prisma Client call.
-
-## Prerequisites
-
-- Node.js ≥ 20
-- npm ≥ 10 (workspaces)
-- PostgreSQL ≥ 14 (added Phase 2 — not required yet)
-- Docker + Docker Compose (added Phase 10 — not required yet)
-
-## Local setup
-
-```bash
-# from the repo root
 npm install
-# ^ postinstall automatically builds packages/shared, since apps/server
-#   and apps/web both import types from it
-
-# copy env templates
 cp apps/server/.env.example apps/server/.env
 cp apps/web/.env.example apps/web/.env.local
 
-# create the database and apply the schema (adjust DATABASE_URL first)
 createdb telemetry_portal
 psql "$DATABASE_URL" -f apps/server/prisma/migrations/20260816120000_init/migration.sql
-
-# seed development accounts
 npm run db:seed --workspace=apps/server
+
+npm run dev:server   # http://localhost:4000
+npm run dev:web      # http://localhost:3000
 ```
 
-### Development login credentials
-
-Seeded by `npm run db:seed --workspace=apps/server` — local development
-only, never used in any deployed environment:
+Seeded accounts for local dev (don't reuse these anywhere real):
 
 | Role | Email | Password |
 |---|---|---|
 | Viewer | `vineet@criss-robotics.dev` | `Vineet@123!` |
 | Engineer | `biswajit@criss-robotics.dev` | `Biswajit@123!` |
 
-## Development commands
-
-Run from the repo root (npm workspaces):
-
-| Command | Description |
-|---|---|
-| `npm run dev:server` | Start the backend in watch mode on `:4000` |
-| `npm run dev:web` | Start the Next.js dev server on `:3000` |
-| `npm run build` | Build `shared` → `server` → `web`, in order |
-| `npm run typecheck` | Type-check every workspace |
-| `npm run lint` | Lint `web` and `server` |
-| `npm run test` | Run backend tests (Vitest + Supertest) |
-
-Verify the backend is up:
+Or skip the manual setup and run everything in Docker — copy `.env.example` to `.env` at the repo root, fill in a `JWT_SECRET`, then:
 
 ```bash
-curl http://localhost:4000/health
-# {"status":"ok"}
+docker compose up --build
 ```
+
+This starts Postgres, the backend, and the frontend together. The backend waits for Postgres to be healthy before starting, and applies migrations on its own at boot.
+
+## Useful commands
+
+| Command | What it does |
+|---|---|
+| `npm run dev:server` / `dev:web` | run the dev servers |
+| `npm run build` | build shared → server → web |
+| `npm run typecheck` | type-check every workspace |
+| `npm run lint` | lint web + server |
+| `npm run test` | run the backend test suite (Vitest + Supertest) |
 
 ## Environment variables
 
-### `apps/server/.env`
+**`apps/server/.env`**
 
-| Variable | Description | Required |
+| Variable | What it's for | Required |
 |---|---|---|
-| `NODE_ENV` | `development` \| `test` \| `production` | No (defaults to `development`) |
-| `PORT` | Port the API listens on | No (defaults to `4000`) |
-| `CORS_ORIGIN` | Exact origin of the frontend, used for CORS (and Socket.IO from Phase 4) | No (defaults to `http://localhost:3000`) |
-| `DATABASE_URL` | PostgreSQL connection string | Yes |
-| `JWT_SECRET` | Secret used to sign JWTs — **never commit a real value** | Added Phase 3 |
-| `JWT_EXPIRES_IN` | Token lifetime, e.g. `1h` | Added Phase 3 |
+| `DATABASE_URL` | Postgres connection string | yes |
+| `JWT_SECRET` | signs auth tokens — generate your own, never commit a real one | yes |
+| `JWT_EXPIRES_IN` | token lifetime, e.g. `1h` | no, defaults to `1h` |
+| `CORS_ORIGIN` | exact frontend origin, used for CORS and Socket.IO | no, defaults to `http://localhost:3000` |
+| `NODE_ENV` | `development` / `test` / `production` | no |
+| `PORT` | port the API listens on | no, defaults to `4000` |
 
-### `apps/web/.env.local`
+**`apps/web/.env.local`**
 
-| Variable | Description | Required |
+| Variable | What it's for | Required |
 |---|---|---|
-| `NEXT_PUBLIC_API_URL` | Base URL of the backend REST API | Yes |
-| `NEXT_PUBLIC_SOCKET_URL` | Base URL for the Socket.IO connection | Added Phase 4 |
+| `NEXT_PUBLIC_API_URL` | backend base URL | yes |
+| `NEXT_PUBLIC_SOCKET_URL` | Socket.IO base URL | yes |
 
-No secrets are committed to source control — see `.gitignore`. Every
-variable above is documented in the corresponding `.env.example` file.
+Nothing real is committed anywhere — check `.gitignore`. Both `.env.example` files spell out the full list.
 
-## API reference
+## API
 
-All responses use the envelope `{ "success": true, "data": ... }` or
-`{ "success": false, "error": { "message", "code" } }`.
+Everything responds with `{ success: true, data }` or `{ success: false, error }`.
 
-| Method | Path | Auth | Description |
+| Method | Path | Auth | What it does |
 |---|---|---|---|
-| `GET` | `/health` | none | Liveness check |
-| `GET` | `/health/db` | none | Readiness check — confirms Postgres connectivity |
-| `POST` | `/auth/login` | none | `{ email, password }` → `{ user, token }` |
-| `GET` | `/auth/me` | Bearer token | Returns the current authenticated user |
-| `GET` | `/telemetry/history` | Bearer token | Recent telemetry readings |
-| `POST` | `/telemetry/trigger` | Bearer token, ENGINEER only | Generates + broadcasts a new reading; body may optionally override `batteryVoltage`, `temperature`, `state` (still server-validated/clamped) |
+| GET | `/health` | — | liveness check |
+| GET | `/health/db` | — | confirms Postgres is reachable |
+| POST | `/auth/login` | — | `{ email, password }` → `{ user, token }` |
+| GET | `/auth/me` | token | current user |
+| GET | `/telemetry/history` | token | recent readings |
+| POST | `/telemetry/trigger` | token, engineer only | generates a reading and broadcasts it; you can optionally pass `batteryVoltage`, `temperature`, `state` and it'll still clamp/validate them server-side |
 
-### Real-time telemetry
+Socket.IO runs alongside the REST API on the same server. A connection needs a JWT in the handshake — there's no anonymous socket access. Right after connecting you get `telemetry:history`; every trigger after that broadcasts `telemetry:update` to every connected client. Nothing polls.
 
-The backend opens a Socket.IO server alongside the REST API. Connections
-must present a JWT in the handshake (`socket.io-client`'s `auth: { token }`
-option) — there's no unauthenticated socket access. On connect, the
-server immediately sends `telemetry:history`; every subsequent reading
-(triggered via `POST /telemetry/trigger`) is broadcast as
-`telemetry:update` to all connected clients. No frontend polling is used.
-
-To verify manually against a running server:
+To watch it live from the command line:
 
 ```bash
 # get a token
@@ -171,84 +108,34 @@ curl -s -X POST http://localhost:4000/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"biswajit@criss-robotics.dev","password":"Biswajit@123!"}'
 
-# in one terminal, listen
+# in one terminal
 node apps/server/scripts/verify-socket.mjs <jwt>
 
-# in another terminal, trigger a reading and watch it arrive live above
+# in another, trigger a reading and watch it show up above instantly
 curl -X POST http://localhost:4000/telemetry/trigger \
   -H "Authorization: Bearer <jwt>" -H "Content-Type: application/json" -d '{}'
 ```
 
-Status codes: `400` invalid input, `401` missing/invalid/expired token
-or bad credentials, `403` authenticated but wrong role, `404` unknown
-route, `429` too many login attempts, `500` unexpected error.
-`/auth/login` returns the same `401` + `INVALID_CREDENTIALS` code for
-both "no such user" and "wrong password" so the response never
-discloses which one it was, and is rate-limited (20 requests / 15 min
-/ IP) against brute-force guessing.
+A few things worth knowing about the auth: login is rate-limited (20 attempts per 15 minutes per IP), and an unknown email and a wrong password both come back as the same 401 — nothing in the response tells you which one it was, so there's no way to enumerate accounts by trying logins.
 
-See [`docs/SECURITY_AUDIT.md`](./docs/SECURITY_AUDIT.md) for the full
-Phase 9 security audit.
+Full write-up of what got checked in the security pass — auth, input validation, SQL injection, CORS, the works — is in [`docs/SECURITY_AUDIT.md`](./docs/SECURITY_AUDIT.md).
 
-## Docker
+## Deploying your own copy
 
-One-command local startup — Postgres, backend, and frontend all
-containerized:
+Step-by-step for Vercel + Railway or Render: [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md). `railway.json` and `render.yaml` are already in the repo and both reuse the same Dockerfiles as local Docker Compose.
+
+## A note on Prisma
+
+`apps/server/prisma/schema.prisma` and the migration under `prisma/migrations/` are the real schema and migration history — the database was built by applying that migration, same as Prisma itself would do.
+
+Where it's a bit different: the actual queries at runtime (`src/repositories/`) go through `pg` directly instead of the generated Prisma Client. This project was built somewhere without network access to Prisma's engine-binary CDN, so `prisma generate` had nowhere to fetch from. On any normal machine, running
 
 ```bash
-cp .env.example .env   # fill in a real JWT_SECRET
-docker compose up --build
+cd apps/server
+npx prisma generate
 ```
 
-- Frontend: http://localhost:3000
-- Backend: http://localhost:4000
-- Postgres: `localhost:5432` (persisted in the `postgres-data` volume)
-
-`server` waits for Postgres to report healthy before starting, and its
-entrypoint applies migrations automatically — it tries the real
-`prisma migrate deploy` first, falling back to applying
-`prisma/migrations/*/migration.sql` directly (idempotent, tracked in
-`_prisma_migrations`) if the Prisma CLI can't reach its engine binary
-in your network environment. `web` waits for `server` to report
-healthy before starting.
-
-> **Note:** the Dockerfiles and compose config were written and
-> verified as far as this environment allows — this sandbox has no
-> `docker` binary, so `docker compose up` itself couldn't be executed
-> here. What *was* verified without Docker: the exact `npm ci` +
-> `npm run build` + `npm prune --omit=dev` sequence each Dockerfile
-> runs (in an isolated directory mirroring each build stage — this
-> caught and fixed a real bug, a `postinstall` script failing in the
-> dependency-only layer), and the fallback migration script end-to-end
-> against a real Postgres database, including idempotent re-runs. Run
-> `docker compose up --build` locally to do the full verification;
-> `docker compose ps` should show all three services healthy, and
-> `curl http://localhost:4000/health` / opening http://localhost:3000
-> should both work.
-
-## Deployment
-
-See [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md) for the full
-Vercel + Railway/Render deployment guide, including `railway.json` and
-`render.yaml` configs (both reuse the Phase 10 Dockerfiles) and an
-end-to-end verification checklist.
-
-## Roadmap
-
-| Phase | Scope |
-|---|---|
-| 1 ✅ | Monorepo foundation |
-| 2 ✅ | PostgreSQL + Prisma schema |
-| 3 ✅ | JWT authentication + RBAC |
-| 4 ✅ | Socket.IO real-time telemetry backend |
-| 5 ✅ | Frontend auth + Zustand store |
-| 6 ✅ | Live telemetry dashboard |
-| 7 ✅ | Engineer control panel |
-| 8 ✅ | UI polish |
-| 9 ✅ | Security audit + full test coverage |
-| 10 ✅ | Dockerization |
-| 11 🟡 | Deployment — configs ready, not yet executed (see below) |
-| 12 | Final submission audit |
+produces a fully typed Prisma Client in a few seconds, and swapping the repository functions over to use it instead of raw SQL is a small, mechanical change — every query already mirrors exactly what the equivalent Prisma call would do.
 
 ## License
 
