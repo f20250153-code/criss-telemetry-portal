@@ -25,7 +25,7 @@ const maxAttempts = 30;
 "
 
 echo "[entrypoint] applying migrations..."
-if npx --yes --package=prisma@7 prisma migrate deploy --schema apps/server/prisma/schema.prisma > /tmp/prisma-migrate.log 2>&1; then
+if npx prisma migrate deploy --schema apps/server/prisma/schema.prisma > /tmp/prisma-migrate.log 2>&1; then
   echo "[entrypoint] migrations applied via Prisma CLI"
 else
   echo "[entrypoint] Prisma CLI unavailable in this environment (see /tmp/prisma-migrate.log) — applying migrations directly instead"
