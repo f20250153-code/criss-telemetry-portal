@@ -23,6 +23,12 @@ RUN npm run build:shared && npm run build --workspace=apps/server
 # Strip devDependencies from the already-resolved tree (safe: full
 # monorepo + lockfile are present here, unlike in a fresh partial copy).
 RUN npm prune --omit=dev
+# npm workspaces sometimes can't hoist every package to the root
+# node_modules (e.g. two workspaces need different major versions of
+# the same dependency) and instead nests a copy inside the workspace's
+# own node_modules/. mkdir -p guarantees these paths exist even when
+# nothing ended up nested, so the COPY below never fails either way.
+RUN mkdir -p apps/server/node_modules packages/shared/node_modules
 
 # ---- runtime: minimal image, non-root user ----
 FROM base AS runtime
@@ -30,6 +36,8 @@ ENV NODE_ENV=production
 RUN addgroup -S app && adduser -S app -G app
 
 COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/apps/server/node_modules ./apps/server/node_modules
+COPY --from=build /app/packages/shared/node_modules ./packages/shared/node_modules
 COPY --from=build /app/package.json ./package.json
 COPY --from=build /app/packages/shared/package.json ./packages/shared/package.json
 COPY --from=build /app/packages/shared/dist ./packages/shared/dist
