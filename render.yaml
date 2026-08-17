@@ -1,0 +1,35 @@
+# Render Blueprint — alternative to Railway for the backend + managed
+# Postgres. Deploy via https://dashboard.render.com/blueprints,
+# pointing at this repo. Reuses the same Dockerfile as Phase 10/Railway.
+#
+# After the blueprint applies, set JWT_SECRET manually in the Render
+# dashboard (sync: false below means Render won't auto-generate or
+# commit it) — never put a real secret in this file.
+
+services:
+  - type: web
+    name: telemetry-portal-server
+    runtime: docker
+    dockerfilePath: apps/server/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4000
+      - key: CORS_ORIGIN
+        sync: false # set to the deployed Vercel frontend URL
+      - key: JWT_SECRET
+        sync: false # generate your own, never commit a real value
+      - key: JWT_EXPIRES_IN
+        value: 1h
+      - key: DATABASE_URL
+        fromDatabase:
+          name: telemetry-portal-db
+          property: connectionString
+
+databases:
+  - name: telemetry-portal-db
+    plan: free
+    postgresMajorVersion: 16

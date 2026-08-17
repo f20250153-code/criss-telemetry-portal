@@ -226,6 +226,13 @@ healthy before starting.
 > `curl http://localhost:4000/health` / opening http://localhost:3000
 > should both work.
 
+## Deployment
+
+See [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md) for the full
+Vercel + Railway/Render deployment guide, including `railway.json` and
+`render.yaml` configs (both reuse the Phase 10 Dockerfiles) and an
+end-to-end verification checklist.
+
 ## Roadmap
 
 | Phase | Scope |
@@ -240,7 +247,7 @@ healthy before starting.
 | 8 ✅ | UI polish |
 | 9 ✅ | Security audit + full test coverage |
 | 10 ✅ | Dockerization |
-| 11 | Deployment |
+| 11 🟡 | Deployment — configs ready, not yet executed (see below) |
 | 12 | Final submission audit |
 
 ## License
