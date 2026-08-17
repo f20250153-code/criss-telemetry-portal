@@ -25,15 +25,15 @@ const SALT_ROUNDS = 12;
 
 const DEV_USERS = [
   {
-    name: "Dana Viewer",
-    email: "viewer@criss-robotics.dev",
-    password: "ViewerDev123!",
+    name: "Vineet",
+    email: "vineet@criss-robotics.dev",
+    password: "Vineet@123!",
     role: "VIEWER",
   },
   {
-    name: "Erin Engineer",
-    email: "engineer@criss-robotics.dev",
-    password: "EngineerDev123!",
+    name: "Biswajit",
+    email: "biswajit@criss-robotics.dev",
+    password: "Biswajit@123!",
     role: "ENGINEER",
   },
 ];

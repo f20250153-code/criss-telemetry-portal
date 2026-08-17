@@ -7,7 +7,7 @@ import { createApp } from "../app";
 import { createSocketServer } from "../realtime/socket";
 import { SOCKET_EVENTS } from "@telemetry/shared";
 
-const ENGINEER = { email: "engineer@criss-robotics.dev", password: "EngineerDev123!" };
+const ENGINEER = { email: "biswajit@criss-robotics.dev", password: "Biswajit@123!" };
 
 describe("Socket.IO telemetry stream", () => {
   const app = createApp();

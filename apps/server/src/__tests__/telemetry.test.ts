@@ -4,8 +4,8 @@ import { createApp } from "../app";
 
 const app = createApp();
 
-const VIEWER = { email: "viewer@criss-robotics.dev", password: "ViewerDev123!" };
-const ENGINEER = { email: "engineer@criss-robotics.dev", password: "EngineerDev123!" };
+const VIEWER = { email: "vineet@criss-robotics.dev", password: "Vineet@123!" };
+const ENGINEER = { email: "biswajit@criss-robotics.dev", password: "Biswajit@123!" };
 
 async function tokenFor(creds: { email: string; password: string }): Promise<string> {
   const res = await request(app).post("/auth/login").send(creds);

@@ -107,10 +107,10 @@ from the deployed frontend (see `apps/server/src/app.ts` and
 ## 5. End-to-end verification
 
 1. Open the Vercel URL.
-2. Log in as viewer (`viewer@criss-robotics.dev` / `ViewerDev123!`).
+2. Log in as viewer (`vineet@criss-robotics.dev` / `Vineet@123!`).
 3. Confirm the dashboard loads and the connection badge shows "Live".
 4. Confirm no engineer panel is visible.
-5. Log out, log in as engineer (`engineer@criss-robotics.dev` / `EngineerDev123!`).
+5. Log out, log in as engineer (`biswajit@criss-robotics.dev` / `Biswajit@123!`).
 6. Confirm the engineer panel is visible.
 7. Click "Generate mock telemetry" — confirm the stat cards, chart, and
    recent-readings list update immediately, with no page reload.

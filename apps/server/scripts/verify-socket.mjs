@@ -8,7 +8,7 @@
  * Get a token first:
  *   curl -s -X POST http://localhost:4000/auth/login \
  *     -H "Content-Type: application/json" \
- *     -d '{"email":"engineer@criss-robotics.dev","password":"EngineerDev123!"}'
+ *     -d '{"email":"biswajit@criss-robotics.dev","password":"Biswajit@123!"}'
  *
  * While this is running, trigger a reading in another terminal:
  *   curl -X POST http://localhost:4000/telemetry/trigger \

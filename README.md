@@ -94,8 +94,8 @@ only, never used in any deployed environment:
 
 | Role | Email | Password |
 |---|---|---|
-| Viewer | `viewer@criss-robotics.dev` | `ViewerDev123!` |
-| Engineer | `engineer@criss-robotics.dev` | `EngineerDev123!` |
+| Viewer | `vineet@criss-robotics.dev` | `Vineet@123!` |
+| Engineer | `biswajit@criss-robotics.dev` | `Biswajit@123!` |
 
 ## Development commands
 
@@ -169,7 +169,7 @@ To verify manually against a running server:
 # get a token
 curl -s -X POST http://localhost:4000/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"engineer@criss-robotics.dev","password":"EngineerDev123!"}'
+  -d '{"email":"biswajit@criss-robotics.dev","password":"Biswajit@123!"}'
 
 # in one terminal, listen
 node apps/server/scripts/verify-socket.mjs <jwt>
